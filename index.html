@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>Endoscopy Training</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<h1>Endoscopy Training</h1>
+
+
+<div id="mode">
+  <button onclick="setMode('view')">Галерея</button>
+  <button onclick="setMode('quiz')">Квіз</button>
+</div>
+
+<div id="gallery"></div>
+
+<div id="viewer" onclick="closeViewer()">
+  <img id="viewerImg">
+</div>
+
+<div id="quiz" style="display:none;">
+  <img id="quizImg">
+  <input id="answer" placeholder="Що це?">
+  <button onclick="checkAnswer()">Перевірити</button>
+  <p id="result"></p>
+</div>
+
+<script>
+function loadGallery() {
+  const gallery = document.getElementById("gallery");
+
+  for (let i = 1; i <= 20; i++) {
+    let num = String(i).padStart(3, '0');
+
+    let img = document.createElement("img");
+    img.src = "images/" + num + ".jpg";
+
+    img.onclick = function() {
+      document.getElementById("viewer").style.display = "flex";
+      document.getElementById("viewerImg").src = this.src;
+    };
+
+    gallery.appendChild(img);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", loadGallery);
+</script>
+
+</body>
+</html>
