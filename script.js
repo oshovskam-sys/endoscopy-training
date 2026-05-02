@@ -5,7 +5,7 @@ let originX = 50;
 let originY = 50;
 
 let isDragging = false;
-let startX, startY;
+let startX = 0, startY = 0;
 let translateX = 0;
 let translateY = 0;
 
@@ -45,7 +45,6 @@ function loadGallery(gallery) {
 // курсор
 function updateCursor() {
   const img = document.getElementById("viewerImg");
-
   if (zoomLevel >= PAN_THRESHOLD) {
     img.style.cursor = "grab";
   } else {
@@ -83,7 +82,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const img = document.getElementById("viewerImg");
   const viewer = document.getElementById("viewer");
 
-  // 🔍 zoom по кліку (тільки до порогу)
+  // 🔍 zoom по кліку (до порогу)
   img.addEventListener("click", function(e) {
     e.stopPropagation();
 
@@ -123,9 +122,10 @@ document.addEventListener("DOMContentLoaded", function () {
     updateCursor();
   });
 
-  // 🖐 DRAG START (тільки після порогу)
+  // 🖐 DRAG START
   img.addEventListener("mousedown", function(e) {
     if (zoomLevel < PAN_THRESHOLD) return;
+    if (e.button !== 0) return;
 
     isDragging = true;
     startX = e.clientX - translateX;
@@ -134,9 +134,9 @@ document.addEventListener("DOMContentLoaded", function () {
     img.style.cursor = "grabbing";
   });
 
-  // 🖐 DRAG MOVE
+  // 🖐 DRAG MOVE (тільки при зажатій кнопці)
   window.addEventListener("mousemove", function(e) {
-    if (!isDragging) return;
+    if (!isDragging || e.buttons !== 1) return;
 
     translateX = e.clientX - startX;
     translateY = e.clientY - startY;
@@ -146,6 +146,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // 🖐 DRAG END
   window.addEventListener("mouseup", function() {
+    if (!isDragging) return;
+
     isDragging = false;
     updateCursor();
   });
