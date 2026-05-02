@@ -1,5 +1,7 @@
 let currentGallery = null;
 let zoomLevel = 1;
+let originX = 50;
+let originY = 50;
 
 // створення вкладок
 function createTabs() {
@@ -26,22 +28,25 @@ function loadGallery(gallery) {
 
     let img = document.createElement("img");
     img.src = gallery.folder + "/" + num + ".jpg";
-
     img.onclick = () => openViewer(img.src);
 
     galleryDiv.appendChild(img);
   }
 }
 
-// fullscreen + reset zoom
+// fullscreen
 function openViewer(src) {
   const viewer = document.getElementById("viewer");
   const img = document.getElementById("viewerImg");
 
   zoomLevel = 1;
-  img.style.transform = "scale(1)";
-  img.src = src;
+  originX = 50;
+  originY = 50;
 
+  img.style.transform = "scale(1)";
+  img.style.transformOrigin = "50% 50%";
+
+  img.src = src;
   viewer.style.display = "flex";
 }
 
@@ -57,30 +62,42 @@ document.addEventListener("DOMContentLoaded", function () {
   const img = document.getElementById("viewerImg");
   const viewer = document.getElementById("viewer");
 
-  // zoom по кліку
-  img.onclick = function(e) {
+  // 🔍 zoom в точку кліку
+  img.addEventListener("click", function(e) {
     e.stopPropagation();
 
+    const rect = img.getBoundingClientRect();
+
+    originX = ((e.clientX - rect.left) / rect.width) * 100;
+    originY = ((e.clientY - rect.top) / rect.height) * 100;
+
     zoomLevel += 0.5;
-    if (zoomLevel > 3) zoomLevel = 1;
+    if (zoomLevel > 4) zoomLevel = 1;
 
+    img.style.transformOrigin = `${originX}% ${originY}%`;
     img.style.transform = `scale(${zoomLevel})`;
-  };
+  });
 
-  // zoom колесом
+  // 🖱 zoom колесом (теж у точку курсора)
   viewer.addEventListener("wheel", function(e) {
     e.preventDefault();
+
+    const rect = img.getBoundingClientRect();
+
+    originX = ((e.clientX - rect.left) / rect.width) * 100;
+    originY = ((e.clientY - rect.top) / rect.height) * 100;
 
     if (e.deltaY < 0) zoomLevel += 0.2;
     else zoomLevel -= 0.2;
 
     if (zoomLevel < 1) zoomLevel = 1;
-    if (zoomLevel > 5) zoomLevel = 5;
+    if (zoomLevel > 6) zoomLevel = 6;
 
+    img.style.transformOrigin = `${originX}% ${originY}%`;
     img.style.transform = `scale(${zoomLevel})`;
   });
 
-  // закриття по ESC
+  // ESC
   document.addEventListener("keydown", function(e) {
     if (e.key === "Escape") {
       closeViewer();
