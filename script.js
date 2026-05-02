@@ -46,4 +46,9 @@ function closeViewer() {
 document.addEventListener("DOMContentLoaded", function () {
   createTabs();
   loadGallery(galleries[0]);
+
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape") {
+    closeViewer();
+  }
 });
