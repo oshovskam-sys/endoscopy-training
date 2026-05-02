@@ -34,8 +34,11 @@ function loadGallery(gallery) {
 
 // fullscreen
 function openViewer(src) {
-  document.getElementById("viewer").style.display = "flex";
-  document.getElementById("viewerImg").src = src;
+  const viewer = document.getElementById("viewer");
+  const img = document.getElementById("viewerImg");
+
+  img.src = src;
+  viewer.style.display = "flex";
 }
 
 function closeViewer() {
