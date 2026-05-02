@@ -31,20 +31,23 @@ img {
   height: 100%;
 
   display: none;
-  justify-content: center;
-  align-items: center;
+  overflow: hidden;
 
-  background: rgba(0, 0, 0, 0.95); /* тільки темний фон */
-  z-index: 9999;
+  background: rgba(0,0,0,0.95);
 }
 
 #viewer img {
-  max-width: 90%;
-  max-height: 90%;
-  cursor: grab;
-  user-select: none;
+  position: absolute;
 
-  transform-origin: center;
+  max-width: none;
+  max-height: none;
+
+  width: auto;
+  height: auto;
+
+  transform-origin: 0 0;
+
+  cursor: grab;
 }
 
 /* це залиш як є */
