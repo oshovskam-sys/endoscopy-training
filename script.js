@@ -39,25 +39,38 @@ function loadGallery(gallery) {
   }
 }
 
-// застосування трансформації
+// transform
 function updateTransform(img) {
   img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
 }
 
-// відкриття
+// відкриття (FIT TO SCREEN)
 function openViewer(src) {
   const viewer = document.getElementById("viewer");
   const img = document.getElementById("viewerImg");
 
-  scale = 1;
-  translateX = 0;
-  translateY = 0;
-
-  img.style.transformOrigin = "0 0";
   img.src = src;
-
-  updateTransform(img);
   viewer.style.display = "flex";
+
+  img.onload = function () {
+    const vw = viewer.clientWidth;
+    const vh = viewer.clientHeight;
+
+    const iw = img.naturalWidth;
+    const ih = img.naturalHeight;
+
+    // fit-to-screen
+    const scaleX = vw / iw;
+    const scaleY = vh / ih;
+    scale = Math.min(scaleX, scaleY);
+
+    // центрування
+    translateX = (vw - iw * scale) / 2;
+    translateY = (vh - ih * scale) / 2;
+
+    img.style.transformOrigin = "0 0";
+    updateTransform(img);
+  };
 }
 
 // закриття
@@ -73,12 +86,11 @@ document.addEventListener("DOMContentLoaded", function () {
   const viewer = document.getElementById("viewer");
   const img = document.getElementById("viewerImg");
 
-  // 🔍 ZOOM + SCROLL
+  // ZOOM + SCROLL
   viewer.addEventListener("wheel", function(e) {
     e.preventDefault();
 
     const rect = img.getBoundingClientRect();
-
     const offsetX = e.clientX - rect.left;
     const offsetY = e.clientY - rect.top;
 
@@ -90,10 +102,9 @@ document.addEventListener("DOMContentLoaded", function () {
       if (e.deltaY < 0) scale *= zoomFactor;
       else scale /= zoomFactor;
 
-      if (scale < 1) scale = 1;
+      if (scale < 0.1) scale = 0.1;
       if (scale > 10) scale = 10;
 
-      // зум в точку курсора
       translateX -= (offsetX / prevScale) * (scale - prevScale);
       translateY -= (offsetY / prevScale) * (scale - prevScale);
 
@@ -101,7 +112,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // 🖱 SCROLL = рух
+    // scroll = рух
     if (e.shiftKey) {
       translateX -= e.deltaY;
     } else {
@@ -109,18 +120,18 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     updateTransform(img);
+
   }, { passive: false });
 
-  // 🖐 DRAG START
+  // DRAG START
   img.addEventListener("mousedown", function(e) {
     isDragging = true;
     startX = e.clientX - translateX;
     startY = e.clientY - translateY;
-
     img.style.cursor = "grabbing";
   });
 
-  // 🖐 DRAG MOVE
+  // DRAG MOVE
   window.addEventListener("mousemove", function(e) {
     if (!isDragging) return;
 
@@ -130,24 +141,20 @@ document.addEventListener("DOMContentLoaded", function () {
     updateTransform(img);
   });
 
-  // 🖐 DRAG END
+  // DRAG END
   window.addEventListener("mouseup", function() {
     isDragging = false;
     img.style.cursor = "grab";
   });
-
-  // курсор
-  img.style.cursor = "grab";
 
   // ESC
   document.addEventListener("keydown", function(e) {
     if (e.key === "Escape") closeViewer();
   });
 
-  // клік поза зображенням
+  // клік поза
   viewer.addEventListener("click", closeViewer);
+  img.addEventListener("click", (e) => e.stopPropagation());
 
-  img.addEventListener("click", function(e) {
-    e.stopPropagation();
-  });
+  img.style.cursor = "grab";
 });
