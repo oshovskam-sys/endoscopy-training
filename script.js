@@ -9,6 +9,8 @@ let startX, startY;
 let translateX = 0;
 let translateY = 0;
 
+const PAN_THRESHOLD = 3;
+
 // створення вкладок
 function createTabs() {
   const mode = document.getElementById("mode");
@@ -40,6 +42,17 @@ function loadGallery(gallery) {
   }
 }
 
+// курсор
+function updateCursor() {
+  const img = document.getElementById("viewerImg");
+
+  if (zoomLevel >= PAN_THRESHOLD) {
+    img.style.cursor = "grab";
+  } else {
+    img.style.cursor = "zoom-in";
+  }
+}
+
 // відкриття
 function openViewer(src) {
   const viewer = document.getElementById("viewer");
@@ -54,6 +67,8 @@ function openViewer(src) {
 
   img.src = src;
   viewer.style.display = "flex";
+
+  updateCursor();
 }
 
 function closeViewer() {
@@ -68,9 +83,11 @@ document.addEventListener("DOMContentLoaded", function () {
   const img = document.getElementById("viewerImg");
   const viewer = document.getElementById("viewer");
 
-  // 🔍 zoom в точку кліку
+  // 🔍 zoom по кліку (тільки до порогу)
   img.addEventListener("click", function(e) {
     e.stopPropagation();
+
+    if (zoomLevel >= PAN_THRESHOLD) return;
 
     const rect = img.getBoundingClientRect();
 
@@ -78,10 +95,11 @@ document.addEventListener("DOMContentLoaded", function () {
     originY = ((e.clientY - rect.top) / rect.height) * 100;
 
     zoomLevel += 0.5;
-    if (zoomLevel > 4) zoomLevel = 1;
 
     img.style.transformOrigin = `${originX}% ${originY}%`;
     img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomLevel})`;
+
+    updateCursor();
   });
 
   // 🖱 zoom колесом
@@ -101,11 +119,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     img.style.transformOrigin = `${originX}% ${originY}%`;
     img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomLevel})`;
+
+    updateCursor();
   });
 
-  // 🖐 DRAG START
+  // 🖐 DRAG START (тільки після порогу)
   img.addEventListener("mousedown", function(e) {
-    if (zoomLevel <= 1) return;
+    if (zoomLevel < PAN_THRESHOLD) return;
 
     isDragging = true;
     startX = e.clientX - translateX;
@@ -127,7 +147,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // 🖐 DRAG END
   window.addEventListener("mouseup", function() {
     isDragging = false;
-    img.style.cursor = "zoom-in";
+    updateCursor();
   });
 
   // ESC
