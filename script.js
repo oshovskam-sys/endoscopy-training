@@ -104,15 +104,19 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // 🖐 DRAG MOVE
-  window.addEventListener("mousemove", function(e) {
-    if (!isDragging || e.buttons !== 1) return;
+ window.addEventListener("mousemove", function(e) {
+  if (!isDragging || e.buttons !== 1) return;
 
-    translateX = e.clientX - startX;
-    translateY = e.clientY - startY;
+  const speed = 1 / zoomLevel * 2; // 👈 ключ
 
-    img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomLevel})`;
-  });
+  translateX += (e.clientX - startX) * speed;
+  translateY += (e.clientY - startY) * speed;
 
+  startX = e.clientX;
+  startY = e.clientY;
+
+  img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomLevel})`;
+});
   // 🖐 DRAG END
   window.addEventListener("mouseup", function() {
     isDragging = false;
