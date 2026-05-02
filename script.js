@@ -1,4 +1,5 @@
 let currentGallery = null;
+let zoomLevel = 1;
 
 // створення вкладок
 function createTabs() {
@@ -32,12 +33,15 @@ function loadGallery(gallery) {
   }
 }
 
-// fullscreen
+// fullscreen + reset zoom
 function openViewer(src) {
   const viewer = document.getElementById("viewer");
   const img = document.getElementById("viewerImg");
 
+  zoomLevel = 1;
+  img.style.transform = "scale(1)";
   img.src = src;
+
   viewer.style.display = "flex";
 }
 
@@ -50,6 +54,33 @@ document.addEventListener("DOMContentLoaded", function () {
   createTabs();
   loadGallery(galleries[0]);
 
+  const img = document.getElementById("viewerImg");
+  const viewer = document.getElementById("viewer");
+
+  // zoom по кліку
+  img.onclick = function(e) {
+    e.stopPropagation();
+
+    zoomLevel += 0.5;
+    if (zoomLevel > 3) zoomLevel = 1;
+
+    img.style.transform = `scale(${zoomLevel})`;
+  };
+
+  // zoom колесом
+  viewer.addEventListener("wheel", function(e) {
+    e.preventDefault();
+
+    if (e.deltaY < 0) zoomLevel += 0.2;
+    else zoomLevel -= 0.2;
+
+    if (zoomLevel < 1) zoomLevel = 1;
+    if (zoomLevel > 5) zoomLevel = 5;
+
+    img.style.transform = `scale(${zoomLevel})`;
+  });
+
+  // закриття по ESC
   document.addEventListener("keydown", function(e) {
     if (e.key === "Escape") {
       closeViewer();
