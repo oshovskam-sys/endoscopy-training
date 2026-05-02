@@ -10,11 +10,8 @@
 
 <h1>Endoscopy Training</h1>
 
-
-<div id="mode">
-  <button onclick="setMode('view')">Галерея</button>
-  <button onclick="setMode('quiz')">Квіз</button>
-</div>
+<!-- вкладки генеруються автоматично -->
+<div id="mode"></div>
 
 <div id="gallery"></div>
 
@@ -29,27 +26,9 @@
   <p id="result"></p>
 </div>
 
-<script>
-function loadGallery() {
-  const gallery = document.getElementById("gallery");
-
-  for (let i = 1; i <= 20; i++) {
-    let num = String(i).padStart(3, '0');
-
-    let img = document.createElement("img");
-    img.src = "images/" + num + ".jpg";
-
-    img.onclick = function() {
-      document.getElementById("viewer").style.display = "flex";
-      document.getElementById("viewerImg").src = this.src;
-    };
-
-    gallery.appendChild(img);
-  }
-} 
-
-document.addEventListener("DOMContentLoaded", loadGallery);
-</script>
+<!-- ПІДКЛЮЧЕННЯ -->
+<script src="config.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>
