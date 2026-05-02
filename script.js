@@ -9,9 +9,7 @@ let startX = 0, startY = 0;
 let translateX = 0;
 let translateY = 0;
 
-const PAN_THRESHOLD = 3;
-
-// створення вкладок
+// вкладки
 function createTabs() {
   const mode = document.getElementById("mode");
   mode.innerHTML = "";
@@ -42,16 +40,6 @@ function loadGallery(gallery) {
   }
 }
 
-// курсор
-function updateCursor() {
-  const img = document.getElementById("viewerImg");
-  if (zoomLevel >= PAN_THRESHOLD) {
-    img.style.cursor = "grab";
-  } else {
-    img.style.cursor = "zoom-in";
-  }
-}
-
 // відкриття
 function openViewer(src) {
   const viewer = document.getElementById("viewer");
@@ -61,13 +49,13 @@ function openViewer(src) {
   translateX = 0;
   translateY = 0;
 
-  img.style.transform = "translate(0px, 0px) scale(1)";
+  img.style.transform = "translate(0px,0px) scale(1)";
   img.style.transformOrigin = "50% 50%";
 
   img.src = src;
   viewer.style.display = "flex";
 
-  updateCursor();
+  img.style.cursor = "grab";
 }
 
 function closeViewer() {
@@ -82,27 +70,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const img = document.getElementById("viewerImg");
   const viewer = document.getElementById("viewer");
 
-  // 🔍 zoom по кліку (до порогу)
-  img.addEventListener("click", function(e) {
-    e.stopPropagation();
-
-    if (zoomLevel >= PAN_THRESHOLD) return;
-
-    const rect = img.getBoundingClientRect();
-
-    originX = ((e.clientX - rect.left) / rect.width) * 100;
-    originY = ((e.clientY - rect.top) / rect.height) * 100;
-
-    zoomLevel += 0.5;
-
-    img.style.transformOrigin = `${originX}% ${originY}%`;
-    img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomLevel})`;
-
-    updateCursor();
-  });
-
-  // 🖱 zoom колесом
+  // 🔍 CTRL + SCROLL → zoom
   viewer.addEventListener("wheel", function(e) {
+    if (!e.ctrlKey) return; // без Ctrl не зумимо
+
     e.preventDefault();
 
     const rect = img.getBoundingClientRect();
@@ -110,21 +81,19 @@ document.addEventListener("DOMContentLoaded", function () {
     originX = ((e.clientX - rect.left) / rect.width) * 100;
     originY = ((e.clientY - rect.top) / rect.height) * 100;
 
-    if (e.deltaY < 0) zoomLevel += 0.2;
-    else zoomLevel -= 0.2;
+    if (e.deltaY < 0) zoomLevel *= 1.1;
+    else zoomLevel *= 0.9;
 
-    if (zoomLevel < 1) zoomLevel = 1;
-    if (zoomLevel > 6) zoomLevel = 6;
+    // обмеження тільки щоб не “зникло”
+    if (zoomLevel < 0.5) zoomLevel = 0.5;
+    if (zoomLevel > 20) zoomLevel = 20;
 
     img.style.transformOrigin = `${originX}% ${originY}%`;
     img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomLevel})`;
-
-    updateCursor();
   });
 
-  // 🖐 DRAG START
+  // 🖐 DRAG START (завжди)
   img.addEventListener("mousedown", function(e) {
-    if (zoomLevel < PAN_THRESHOLD) return;
     if (e.button !== 0) return;
 
     isDragging = true;
@@ -134,7 +103,7 @@ document.addEventListener("DOMContentLoaded", function () {
     img.style.cursor = "grabbing";
   });
 
-  // 🖐 DRAG MOVE (тільки при зажатій кнопці)
+  // 🖐 DRAG MOVE
   window.addEventListener("mousemove", function(e) {
     if (!isDragging || e.buttons !== 1) return;
 
@@ -146,10 +115,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // 🖐 DRAG END
   window.addEventListener("mouseup", function() {
-    if (!isDragging) return;
-
     isDragging = false;
-    updateCursor();
+    img.style.cursor = "grab";
   });
 
   // ESC
