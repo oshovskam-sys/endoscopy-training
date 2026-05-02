@@ -45,6 +45,13 @@ img {
   cursor: zoom-out;
 }
 
+#viewer img {
+  max-width: 90%;
+  max-height: 90%;
+  transition: transform 0.3s ease;
+  cursor: zoom-in;
+}
+
 /* це залиш як є */
 #quiz img {
   width: 400px;
