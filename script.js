@@ -1,5 +1,8 @@
 let currentGallery = null;
 
+let currentIndex = 0;
+let currentImages = [];
+
 let scale = 1;
 let translateX = 0;
 let translateY = 0;
@@ -28,12 +31,18 @@ function loadGallery(gallery) {
   const galleryDiv = document.getElementById("gallery");
   galleryDiv.innerHTML = "";
 
+  currentImages = [];
+
   for (let i = 1; i <= gallery.count; i++) {
     let num = String(i).padStart(3, '0');
+    let src = gallery.folder + "/" + num + ".jpg";
+
+    currentImages.push(src);
 
     let img = document.createElement("img");
-    img.src = gallery.folder + "/" + num + ".jpg";
-    img.onclick = () => openViewer(img.src);
+    img.src = src;
+
+    img.onclick = () => openViewerByIndex(i - 1);
 
     galleryDiv.appendChild(img);
   }
@@ -44,7 +53,13 @@ function updateTransform(img) {
   img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
 }
 
-// відкриття (FIT TO SCREEN)
+// відкриття по індексу
+function openViewerByIndex(index) {
+  currentIndex = index;
+  openViewer(currentImages[currentIndex]);
+}
+
+// відкриття (fit-to-screen)
 function openViewer(src) {
   const viewer = document.getElementById("viewer");
   const img = document.getElementById("viewerImg");
@@ -59,12 +74,10 @@ function openViewer(src) {
     const iw = img.naturalWidth;
     const ih = img.naturalHeight;
 
-    // fit-to-screen
     const scaleX = vw / iw;
     const scaleY = vh / ih;
     scale = Math.min(scaleX, scaleY);
 
-    // центрування
     translateX = (vw - iw * scale) / 2;
     translateY = (vh - ih * scale) / 2;
 
@@ -86,7 +99,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const viewer = document.getElementById("viewer");
   const img = document.getElementById("viewerImg");
 
-  // ZOOM + SCROLL
+  // 🔍 ZOOM + SCROLL
   viewer.addEventListener("wheel", function(e) {
     e.preventDefault();
 
@@ -123,7 +136,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   }, { passive: false });
 
-  // DRAG START
+  // 🖐 DRAG START
   img.addEventListener("mousedown", function(e) {
     isDragging = true;
     startX = e.clientX - translateX;
@@ -131,7 +144,7 @@ document.addEventListener("DOMContentLoaded", function () {
     img.style.cursor = "grabbing";
   });
 
-  // DRAG MOVE
+  // 🖐 DRAG MOVE
   window.addEventListener("mousemove", function(e) {
     if (!isDragging) return;
 
@@ -141,15 +154,32 @@ document.addEventListener("DOMContentLoaded", function () {
     updateTransform(img);
   });
 
-  // DRAG END
+  // 🖐 DRAG END
   window.addEventListener("mouseup", function() {
     isDragging = false;
     img.style.cursor = "grab";
   });
 
-  // ESC
+  // ⬅➡ СТРІЛКИ
   document.addEventListener("keydown", function(e) {
-    if (e.key === "Escape") closeViewer();
+    const viewerOpen = viewer.style.display === "flex";
+    if (!viewerOpen) return;
+
+    if (e.key === "ArrowRight") {
+      currentIndex++;
+      if (currentIndex >= currentImages.length) currentIndex = 0;
+      openViewer(currentImages[currentIndex]);
+    }
+
+    if (e.key === "ArrowLeft") {
+      currentIndex--;
+      if (currentIndex < 0) currentIndex = currentImages.length - 1;
+      openViewer(currentImages[currentIndex]);
+    }
+
+    if (e.key === "Escape") {
+      closeViewer();
+    }
   });
 
   // клік поза
