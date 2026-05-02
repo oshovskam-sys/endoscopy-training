@@ -1,13 +1,12 @@
 let currentGallery = null;
 
-let zoomLevel = 1;
-let originX = 50;
-let originY = 50;
-
-let isDragging = false;
-let startX = 0, startY = 0;
+let scale = 1;
 let translateX = 0;
 let translateY = 0;
+
+let isDragging = false;
+let startX = 0;
+let startY = 0;
 
 // вкладки
 function createTabs() {
@@ -40,24 +39,28 @@ function loadGallery(gallery) {
   }
 }
 
+// застосування трансформації
+function updateTransform(img) {
+  img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+}
+
 // відкриття
 function openViewer(src) {
   const viewer = document.getElementById("viewer");
   const img = document.getElementById("viewerImg");
 
-  zoomLevel = 1;
+  scale = 1;
   translateX = 0;
   translateY = 0;
 
-  img.style.transform = "translate(0px,0px) scale(1)";
-  img.style.transformOrigin = "50% 50%";
-
+  img.style.transformOrigin = "0 0";
   img.src = src;
-  viewer.style.display = "flex";
 
-  img.style.cursor = "grab";
+  updateTransform(img);
+  viewer.style.display = "flex";
 }
 
+// закриття
 function closeViewer() {
   document.getElementById("viewer").style.display = "none";
 }
@@ -67,35 +70,49 @@ document.addEventListener("DOMContentLoaded", function () {
   createTabs();
   loadGallery(galleries[0]);
 
-  const img = document.getElementById("viewerImg");
   const viewer = document.getElementById("viewer");
+  const img = document.getElementById("viewerImg");
 
-  // 🔍 CTRL + SCROLL → zoom
+  // 🔍 ZOOM + SCROLL
   viewer.addEventListener("wheel", function(e) {
-    if (!e.ctrlKey) return; // без Ctrl не зумимо
-
     e.preventDefault();
 
     const rect = img.getBoundingClientRect();
 
-    originX = ((e.clientX - rect.left) / rect.width) * 100;
-    originY = ((e.clientY - rect.top) / rect.height) * 100;
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
 
-    if (e.deltaY < 0) zoomLevel *= 1.1;
-    else zoomLevel *= 0.9;
+    // CTRL = zoom
+    if (e.ctrlKey) {
+      const zoomFactor = 1.1;
+      const prevScale = scale;
 
-    // обмеження тільки щоб не “зникло”
-    if (zoomLevel < 0.5) zoomLevel = 0.5;
-    if (zoomLevel > 20) zoomLevel = 20;
+      if (e.deltaY < 0) scale *= zoomFactor;
+      else scale /= zoomFactor;
 
-    img.style.transformOrigin = `${originX}% ${originY}%`;
-    img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomLevel})`;
-  });
+      if (scale < 1) scale = 1;
+      if (scale > 10) scale = 10;
 
-  // 🖐 DRAG START (завжди)
+      // зум в точку курсора
+      translateX -= (offsetX / prevScale) * (scale - prevScale);
+      translateY -= (offsetY / prevScale) * (scale - prevScale);
+
+      updateTransform(img);
+      return;
+    }
+
+    // 🖱 SCROLL = рух
+    if (e.shiftKey) {
+      translateX -= e.deltaY;
+    } else {
+      translateY -= e.deltaY;
+    }
+
+    updateTransform(img);
+  }, { passive: false });
+
+  // 🖐 DRAG START
   img.addEventListener("mousedown", function(e) {
-    if (e.button !== 0) return;
-
     isDragging = true;
     startX = e.clientX - translateX;
     startY = e.clientY - translateY;
@@ -104,27 +121,33 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // 🖐 DRAG MOVE
- window.addEventListener("mousemove", function(e) {
-  if (!isDragging || e.buttons !== 1) return;
+  window.addEventListener("mousemove", function(e) {
+    if (!isDragging) return;
 
-  const speed = 1 / zoomLevel * 2; // 👈 ключ
+    translateX = e.clientX - startX;
+    translateY = e.clientY - startY;
 
-  translateX += (e.clientX - startX) * speed;
-  translateY += (e.clientY - startY) * speed;
+    updateTransform(img);
+  });
 
-  startX = e.clientX;
-  startY = e.clientY;
-
-  img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomLevel})`;
-});
   // 🖐 DRAG END
   window.addEventListener("mouseup", function() {
     isDragging = false;
     img.style.cursor = "grab";
   });
 
+  // курсор
+  img.style.cursor = "grab";
+
   // ESC
   document.addEventListener("keydown", function(e) {
     if (e.key === "Escape") closeViewer();
+  });
+
+  // клік поза зображенням
+  viewer.addEventListener("click", closeViewer);
+
+  img.addEventListener("click", function(e) {
+    e.stopPropagation();
   });
 });
